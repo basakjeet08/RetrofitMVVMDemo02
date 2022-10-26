@@ -3,6 +3,7 @@ package com.example.retrofitmvvmdemo02.ui
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.d
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.retrofitmvvmdemo02.adapters.NewsApiAdapter
@@ -44,26 +45,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.getNews("us" , "business")
 
         //Setting the observer of the myCall variable at ViewModel and this part will be executed when the data changes
-        viewModel.myCall.observe(this){call ->
-            call.enqueue(object : Callback<NewsData>{
-
-                //If we get a positive response then this block is executed
-                override fun onResponse(call: Call<NewsData>, response: Response<NewsData>) {
-
-                    //Checking if the received response is valid or invalid
-                    if(!response.isSuccessful){
-                        d(Constants.TAG , response.code().toString())
-                        return
-                    }
-                    //Updating the list at the adapter class which changes the data and sets it again
-                    adapter.updateList(response.body()!!.articles!!)
-                }
-
-                // This function is called when there is no response or a failure
-                override fun onFailure(call: Call<NewsData>, t: Throwable) {
-                    d(Constants.TAG , t.message.toString())
-                }
-            })
+        viewModel.myCall.observe(this){
+            myCallObserver(it)
         }
     }
 
@@ -71,5 +54,28 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView(){
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
+    }
+
+    //This function is Executed when the myCall value changes
+    private fun myCallObserver(call : Call<NewsData>){
+        call.enqueue(object : Callback<NewsData>{
+
+            //If we get a positive response then this block is executed
+            override fun onResponse(call: Call<NewsData>, response: Response<NewsData>) {
+                /**
+                 * Checking if the received response is valid or invalid and for valid response we are
+                 * Updating the list at the adapter class which changes the data and sets it again
+                 */
+                if(!response.isSuccessful)
+                    Toast.makeText(baseContext , "Not Working" , Toast.LENGTH_SHORT).show()
+                else
+                    adapter.updateList(response.body()!!.articles!!)
+            }
+
+            // This function is called when there is no response or a failure
+            override fun onFailure(call: Call<NewsData>, t: Throwable) {
+                d(Constants.TAG , t.message.toString())
+            }
+        })
     }
 }
